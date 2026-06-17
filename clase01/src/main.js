@@ -6,35 +6,103 @@ const scene = new THREE.Scene();
 
 // 2. CÁMARA
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 3;
+camera.position.z = 5; // Lo alejé un poco más para ver mejor el escenario
 
 // 3. RENDERIZADOR
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 4. CUBO
+// ==========================================
+// RELOJ PARA DELTA TIME
+// ==========================================
+const clock = new THREE.Clock();
+
+// 4. CUBO (Jugador)
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshStandardMaterial({ color: 0x0000ff });
-
-//cubo1
 const cube = new THREE.Mesh(geometry, material);
-cube.position.set(1,3,-5);
-
-//cubo2
-const cube2 = new THREE.Mesh(geometry, material);
-cube2.position.set(2,2,-5);
-
 scene.add(cube);
-scene.add(cube2);
 
-
-// Diccionario para registrar qué teclas están presionadas (COMA CORREGIDA)
+// Diccionario de teclas
 const keys = {
     w: false,
     a: false,
     s: false,
     d: false,
+    shift: false,
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false    
+};
+
+// LUCES
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(3, 5, 2); 
+scene.add(directionalLight);
+
+// 5. BUCLE DE ANIMACIÓN (Game Loop)
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Obtener el tiempo transcurrido desde el último frame
+    const deltaTime = clock.getDelta();
+
+    // 1. CALCULAR VELOCIDAD (Ahora por segundo, no por frame)
+    let speed = 5; // 5 unidades por segundo
+    if (keys.shift) {
+        speed = 10; // Velocidad de Sprint
+    }
+
+    // Velocidad de rotación (radianes por segundo)
+    const rotationSpeed = 3; 
+
+    // --- MECÁNICA DE MOVIMIENTO (WASD) ---
+    // Multiplicamos por deltaTime para que sea uniforme en cualquier PC
+    if (keys.w) cube.position.y += speed * deltaTime; 
+    if (keys.s) cube.position.y -= speed * deltaTime; 
+    if (keys.a) cube.position.x -= speed * deltaTime; 
+    if (keys.d) cube.position.x += speed * deltaTime; 
+
+    // --- MECÁNICA DE ROTACIÓN (Flechas) ---
+    if (keys.ArrowUp) cube.rotation.x -= rotationSpeed * deltaTime; 
+    if (keys.ArrowDown) cube.rotation.x += rotationSpeed * deltaTime; 
+    if (keys.ArrowRight) cube.rotation.y += rotationSpeed * deltaTime; 
+    if (keys.ArrowLeft) cube.rotation.y -= rotationSpeed * deltaTime; 
+
+    // --- LIMITAR LA POSICIÓN ---
+    if (cube.position.x > 5) cube.position.x = 5;
+    else if (cube.position.x < -5) cube.position.x = -5;
+
+    if (cube.position.y > 3) cube.position.y = 3;
+    else if (cube.position.y < -3) cube.position.y = -3;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// 6. AJUSTE DE PANTALLA
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// LISTENERS
+window.addEventListener('keydown', (event) => {
+    const key = event.key.startsWith('Arrow') ? event.key : event.key.toLowerCase();
+    if (key in keys) keys[key] = true;
+});
+
+window.addEventListener('keyup', (event) => {
+    const key = event.key.startsWith('Arrow') ? event.key : event.key.toLowerCase();
+    if (key in keys) keys[key] = false;
+});    d: false,
     shift: false,
     ArrowUp: false,
     ArrowDown: false,
